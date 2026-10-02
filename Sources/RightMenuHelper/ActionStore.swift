@@ -15,6 +15,15 @@ final class ActionStore: ObservableObject {
 
     var urls: [QuickAction] { actions.filter { $0.type == .url } }
     var apps: [QuickAction] { actions.filter { $0.type == .app } }
+    var files: [QuickAction] { actions.filter { $0.type == .file } }
+
+    func items(of type: QuickActionType) -> [QuickAction] {
+        switch type {
+        case .url: return urls
+        case .app: return apps
+        case .file: return files
+        }
+    }
 
     func add(_ action: QuickAction) {
         actions.append(action)
@@ -31,7 +40,7 @@ final class ActionStore: ObservableObject {
 
     /// 在同类型列表中上移/下移一项
     func move(_ action: QuickAction, by offset: Int, in type: QuickActionType) {
-        let list = (type == .url ? urls : apps)
+        let list = items(of: type)
         guard let from = list.firstIndex(where: { $0.id == action.id }) else { return }
         let to = from + offset
         guard to >= 0 && to < list.count else { return }
