@@ -1,63 +1,68 @@
 # FastLaunch
 
-> macOS 菜单栏快速启动工具 —— 一个全局快捷键，随时打开常用网址与应用。
+> A macOS menu-bar launcher — one global hotkey to open your favorite websites, apps, and files.
 
-FastLaunch 是一款轻量级的 macOS 菜单栏常驻小工具（LSUIElement，无 Dock 图标）。它把你最常用的**网址**和 **App** 收进一个可自定义的快捷菜单，通过菜单栏图标或**全局快捷键**一键呼出、点击即打开。你甚至可以给每个快捷项配置一条"打开前先执行的命令"（比如先开启某项设置，再启动某个 App）。
+FastLaunch is a lightweight macOS menu-bar utility (LSUIElement, no Dock icon). It keeps your most-used **websites**, **apps**, and **files/folders** in one customizable menu, summoned from the menu bar or a **global hotkey**. You can even attach multiple pre-launch shell commands to any shortcut (e.g. connect a VPN first, then open the app), and search everything instantly.
 
 ---
 
-## 功能特性
+## Features
 
-- **菜单栏常驻**：常驻顶部菜单栏，占用资源极低，点击 ⚡ 图标即弹出快捷菜单。
-- **全局快捷键呼出**：默认 `⌥⌘L`（Option + Command + L），在任何应用里都能一键呼出菜单；快捷键可自定义、可开关。
-- **网址 & App 混排**：一个菜单里同时支持"常用网址"和"常用 App"，两者可分别管理、排序。
-- **完全自定义**：每个快捷项的名称、目标（网址或 App）、顺序都可自由配置。
-- **前置命令**：可选地为某个快捷项设置一条 shell 命令，先执行再打开目标（例如：先连接 VPN / 开启勿扰 / 启动某项服务，再打开对应 App）。
-- **中英双语**：界面支持跟随系统 / 简体中文 / English，默认英文，随时切换。
-- **配置持久化**：所有设置自动保存，重启不丢失。
+- **Menu-bar resident** — lives in the top menu bar with a ⚡ icon and near-zero resource usage.
+- **Global hotkey** — summon the menu from anywhere with `⌥⌘L` (Option + Command + L) by default; fully customizable and toggleable.
+- **Websites, apps & files** — one menu for all three kinds of shortcuts, each group managed and reordered independently. File items show their actual path under the title.
+- **Instant search** — a built-in search field at the top of the menu filters shortcuts as you type, with pre-lowercased indexes, multi-token matching, and relevance ranking.
+- **Pre-launch commands** — attach any number of shell commands to a shortcut, executed in order with a configurable wait interval between each, before the target opens.
+- **Shortcut manager** — view and re-record every app shortcut (global hotkey, Open Settings, Quit), plus any per-app shortcuts you've added in macOS System Settings (App Shortcuts), which can be removed right from the panel.
+- **Launch at login** — optional (off by default), managed via `SMAppService`.
+- **Bilingual UI** — English / Simplified Chinese, defaulting to English, switchable anytime.
+- **Persistent config** — everything is saved automatically and survives restarts.
 
-## 技术栈
+## Tech Stack
 
-| 项 | 说明 |
+| Item | Details |
 |---|---|
-| 语言 | Swift |
-| 界面 | SwiftUI（设置面板）+ AppKit（菜单栏 & 打开动作） |
-| 工程 | Swift Package Manager（无需 Xcode 工程） |
-| 系统要求 | macOS 13.0+ |
-| 状态栏 | NSStatusItem + NSMenu |
-| 全局热键 | `NSEvent.addGlobalMonitorForEvents` |
-| 打开目标 | `NSWorkspace.shared.open` |
-| 配置存储 | `UserDefaults` |
+| Language | Swift |
+| UI | SwiftUI (settings panel) + AppKit (menu bar & actions) |
+| Project | Swift Package Manager (no Xcode project needed) |
+| Requirements | macOS 13.0+ |
+| Menu bar | `NSStatusItem` + `NSMenu` |
+| Global hotkey | `NSEvent.addGlobalMonitorForEvents` |
+| Opening targets | `NSWorkspace.shared.open` |
+| Storage | `UserDefaults` |
 
-## 工程结构
+## Project Structure
 
 ```
 FastLaunch/
-├── Package.swift                    # SPM 工程定义
-├── build.sh                         # 一键编译 + 打包 .app
+├── Package.swift                    # SPM manifest
+├── build.sh                         # build & bundle FastLaunch.app in one step
 ├── Resources/
-│   └── Info.plist                   # 应用元信息（LSUIElement=true）
+│   └── Info.plist                   # app metadata (LSUIElement=true)
 ├── Assets/
-│   └── AppIcon.icns                 # 应用图标
+│   └── AppIcon.icns                 # app icon
 └── Sources/RightMenuHelper/
-    ├── Models.swift                 # 数据模型（QuickAction）
-    ├── ActionStore.swift            # 配置读写、增删改排
-    ├── AppDelegate.swift            # 状态栏、菜单构建、打开逻辑、热键集成
-    ├── HotKeyManager.swift          # 全局热键注册 / 录制
-    ├── Localizer.swift              # 中英双语本地化
-    └── SettingsView.swift           # SwiftUI 设置面板
+    ├── Models.swift                 # data models (QuickAction, PreCommandStep)
+    ├── ActionStore.swift            # persistence & CRUD
+    ├── AppDelegate.swift            # status item, menu building, launch logic, hotkeys
+    ├── HotKeyManager.swift          # global hotkey registration & recording
+    ├── SearchIndex.swift            # fast in-menu search with ranked results
+    ├── ShortcutSettings.swift       # menu shortcut storage & system app shortcuts
+    ├── LaunchAtLogin.swift          # SMAppService login item
+    ├── Localizer.swift              # EN/CN localization
+    └── SettingsView.swift           # SwiftUI settings panel
 ```
 
-## 快速开始
+## Getting Started
 
-### 方式一：直接运行（本机）
+### Option 1: Build & run locally
 
 ```bash
-./build.sh          # 编译并打包出 FastLaunch.app
-open FastLaunch.app # 运行
+./build.sh          # compiles and bundles FastLaunch.app
+open FastLaunch.app # run it
 ```
 
-### 方式二：从源码编译（推荐给其他 Mac 用户，无签名警告）
+### Option 2: Build from source (recommended for other Macs — no Gatekeeper warnings)
 
 ```bash
 git clone https://github.com/Yifeihuang-Dev/FastLaunch.git
@@ -66,21 +71,24 @@ cd FastLaunch
 open FastLaunch.app
 ```
 
-本机编译产物无隔离标记，可直接双击打开。
+Binaries compiled on your own machine carry no quarantine attribute, so they open with a plain double-click.
 
-### 方式三：安装版（dmg）
+### Option 3: Install from the dmg
 
-解压 `FastLaunch.dmg`，将 `FastLaunch.app` 拖入「应用程序」文件夹。首次打开如遇系统拦截，请在图标上**按住 Control 单击 → 打开**一次即可。
+Open `FastLaunch.dmg` and drag `FastLaunch.app` into your Applications folder. Since the app is unsigned, on first launch **Control-click the icon → Open** once to bypass Gatekeeper.
 
-## 使用说明
+## Usage
 
-1. 启动后点菜单栏 ⚡ 图标，或按全局快捷键 `⌥⌘L` 呼出菜单。
-2. 点击某项即打开对应网址 / App；若该项配置了前置命令，会先执行命令再打开目标。
-3. 在设置面板中：
-   - 切换界面语言
-   - 开关 / 修改全局快捷键
-   - 添加、编辑、删除、上移 / 下移快捷项
+1. Click the ⚡ icon in the menu bar, or press the global hotkey `⌥⌘L`.
+2. Click any item to open its website / app / file. If pre-launch commands are configured, they run first (with their wait intervals), then the target opens.
+3. Use the search field at the top of the menu to filter shortcuts instantly.
+4. In the settings panel you can:
+   - switch the UI language
+   - toggle / re-record the global hotkey, menu shortcuts, and review system app shortcuts
+   - add, edit, delete, and reorder shortcuts (websites, apps, files/folders)
+   - edit multi-step pre-launch commands with delays
+   - enable launch-at-login
 
-## 许可
+## License
 
-仅个人使用与学习交流。本工具未经 Apple 开发者签名与公证，跨设备分发时 macOS 可能弹出安全提示，属正常现象。
+For personal use and learning only. The app is not signed or notarized with an Apple Developer account, so macOS may show a security prompt when distributing across machines — this is expected behavior.
